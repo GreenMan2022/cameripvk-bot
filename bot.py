@@ -34,12 +34,8 @@ async def handle_webapp_data(update: Update, context: ContextTypes.DEFAULT_TYPE)
         data = update.effective_message.web_app_data.data
         logger.info(f"📩 Получены данные: {data}")
 
-        # Проверяем, что пришло "OK"
-        if data == "OK":
-            await context.bot.send_message(chat_id=GROUP_ID, text="✅ ОК")
-            await update.message.reply_text("✅ Сообщение 'ОК' отправлено в группу!")
-        else:
-            await update.message.reply_text(f"📩 Получено: {data}")
+        # Отправляем ОТВЕТ В ТОТ ЖЕ ЧАТ (в бот)
+        await update.message.reply_text(f"✅ Получено: {data}")
 
     except Exception as e:
         logger.error(f"❌ Ошибка: {e}")
