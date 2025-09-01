@@ -303,14 +303,13 @@ async def run_web_server():
 # === Запуск бота ===
 async def main():
     await run_web_server()
-
     application = Application.builder().token(API_TOKEN).build()
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.StatusUpdate.WEB_APP_DATA, handle_webapp_data))
-
     logger.info("🚀 Бот запущен")
     await application.run_polling()
 
 if __name__ == "__main__":
     import asyncio
-    asyncio.run(main())
+    loop = asyncio.get_event_loop()
+    loop.create_task(main())
