@@ -6,7 +6,7 @@ from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandl
 # === Настройки ===
 API_TOKEN = "8191852280:AAFcOI5tVlJlk4xxnzxAgIUBmW4DW5KElro"
 GROUP_ID = -1003033000994
-WEB_APP_URL = "https://cameri-github-io.onrender.com"  # ← Твоя GitHub Pages
+WEB_APP_URL = "https://cameri-github-io.onrender.com"  # ← Замени на свою ссылку
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
