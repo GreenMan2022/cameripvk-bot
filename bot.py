@@ -4,55 +4,49 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
 # === Настройки ===
-API_TOKEN = "8191852280:AAFcOI5tVlJlk4xxnzxAgIUBmW4DW5KElro"
-GROUP_ID = "-1003033000994"
-WEB_APP_URL = "https://cameri-github-io.onrender.com"  # ← Замени на свою ссылку
+API_TOKEN = "8191852280:AAFcOI5tVlJlk4xxnzxAgIUBmW4DW5KElro"  # ← Твой токен
+GROUP_ID = -1003033000994  # ← ID твоей группы
+WEB_APP_URL = "https://test-webapp.onrender.com"  # ← Ссылка на твой Static Site
 
+# Логирование
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+# === /start — отправляем кнопку ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     logger.info(f"Получен /start от {user.full_name}")
 
-    keyboard = [[{"text": "🎥 Открыть камеры", "web_app": {"url": WEB_APP_URL}}]]
+    # Кнопка с WebApp
+    keyboard = [[{"text": "🔧 Открыть тестовую страницу", "web_app": {"url": WEB_APP_URL}}]]
     reply_markup = {"inline_keyboard": keyboard}
 
     await update.message.reply_text(
-        "👋 Добро пожаловать!\nНажмите кнопку ниже.",
+        "👋 Привет! Нажми кнопку ниже, чтобы протестировать WebApp.",
         reply_markup=reply_markup
     )
 
 
+# === Обработка web_app_data ===
 async def handle_webapp_data(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         data = update.effective_message.web_app_data.data
         logger.info(f"📩 Получены данные: {data}")
 
-        import json
-        data = json.loads(data)
-        event_type = data.get("type", "неизвестно")
-        camera = data.get("camera", "неизвестна")
-        timestamp = data.get("timestamp", "неизвестно")
-        user = update.effective_user
-
-        text = (
-            f"🚨 <b>Событие:</b> {event_type}\n"
-            f"📹 <b>Камера:</b> {camera}\n"
-            f"👤 <b>Пользователь:</b> {user.full_name}\n"
-            f"🆔 <b>ID:</b> {user.id}\n"
-            f"🕒 <b>Время:</b> {timestamp}"
-        )
-
-        await context.bot.send_message(chat_id=GROUP_ID, text=text, parse_mode="HTML")
-        await update.message.reply_text("✅ Отправлено в группу!")
+        # Проверяем, что пришло "OK"
+        if data == "OK":
+            await context.bot.send_message(chat_id=GROUP_ID, text="✅ ОК")
+            await update.message.reply_text("✅ Сообщение 'ОК' отправлено в группу!")
+        else:
+            await update.message.reply_text(f"📩 Получено: {data}")
 
     except Exception as e:
         logger.error(f"❌ Ошибка: {e}")
         await update.message.reply_text(f"❌ Ошибка: {e}")
 
 
+# === Запуск бота ===
 def main():
     application = Application.builder().token(API_TOKEN).build()
 
