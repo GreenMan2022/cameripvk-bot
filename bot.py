@@ -1,21 +1,20 @@
-# bot.py
 import logging
 from http import HTTPStatus
-from urllib.parse import urlparse
-
 from aiohttp import web
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
+import asyncio
+import os
 
 # === Настройки ===
-API_TOKEN = "8191852280:AAFcOI5tVlJlk4xxnzxAgIUBmW4DW5KElro"  # ← Замени!
-GROUP_ID = -1003033000994  # ← Замени!
-PORT = int("10000")  # Render передаст PORT через env
+API_TOKEN = "8191852280:AAFcOI5tVlJlk4xxnzxAgIUBmW4DW5KElro"
+GROUP_ID = -1003033000994
+PORT = int(os.environ.get("PORT", 10000))
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# === Встроенный HTML (всё в одном файле) ===
+# === Встроенный HTML ===
 HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -285,28 +284,27 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 </body>
 </html>"""
 
-# === Веб-сервер: раздаёт HTML ===
+# === Веб-сервер ===
 async def handle_html(request):
     return web.Response(text=HTML_TEMPLATE, content_type="text/html")
 
-# === Бот: /start ===
+async def run_web_server():
+    app = web.Application()
+    app.router.add_get("/", handle_html)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, '0.0.0.0', PORT)
+    await site.start()
+    logger.info(f"🌐 Веб-сервер запущен на порту {PORT}")
+
+# === Бот ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     logger.info(f"Получен /start от {user.full_name} (ID: {user.id})")
-
-    # Авто-определение HTTPS-ссылки
-    host = request.host
-    web_app_url = f"https://{host}"
-    keyboard = [[InlineKeyboardButton("🎥 Открыть камеры", web_app={"url": web_app_url})]]
+    keyboard = [[InlineKeyboardButton("🎥 Открыть камеры", web_app={"url": f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME', 'localhost')}:{PORT}"})]]
     reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text("👋 Добро пожаловать!", reply_markup=reply_markup)
 
-    await update.message.reply_text(
-        "👋 Добро пожаловать в систему камер Первоуральска!\n\n"
-        "Нажмите кнопку ниже, чтобы начать просмотр и отправку событий.",
-        reply_markup=reply_markup
-    )
-
-# === Обработка web_app_data ===
 async def handle_webapp_data(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         data = update.effective_message.web_app_data.data
@@ -327,22 +325,12 @@ async def handle_webapp_data(update: Update, context: ContextTypes.DEFAULT_TYPE)
         )
 
         await context.bot.send_message(chat_id=GROUP_ID, text=text, parse_mode="HTML")
-        await update.message.reply_text("✅ Событие успешно отправлено в группу!")
+        await update.message.reply_text("✅ Событие отправлено!")
     except Exception as e:
         logger.error(f"❌ Ошибка: {e}")
         await update.message.reply_text(f"❌ Ошибка: {e}")
 
-# === Запуск веб-сервера ===
-async def run_web_server():
-    app = web.Application()
-    app.router.add_get("/", handle_html)
-    runner = web.AppRunner(app)
-    await runner.setup()
-    site = web.TCPSite(runner, '0.0.0.0', PORT)
-    await site.start()
-    logger.info(f"🌐 Веб-сервер запущен на порту {PORT}")
-
-# === Запуск бота ===
+# === Запуск ===
 async def main():
     await run_web_server()
     application = Application.builder().token(API_TOKEN).build()
@@ -352,6 +340,14 @@ async def main():
     await application.run_polling()
 
 if __name__ == "__main__":
-    import asyncio
-    loop = asyncio.get_event_loop()
-    loop.create_task(main())
+    try:
+        asyncio.run(main())
+    except (KeyboardInterrupt, SystemExit):
+        pass
+    except Exception as e:
+        logger.error(f"Critical: {e}")
+        # Держим процесс живым
+        try:
+            asyncio.get_event_loop().run_forever()
+        except:
+            pass
