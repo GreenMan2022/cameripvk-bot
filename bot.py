@@ -1,57 +1,40 @@
 # bot.py
+from aiogram import Bot, Dispatcher, F, types
+from aiogram.filters import Command
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 import logging
-from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
 # === Настройки ===
-API_TOKEN = "8191852280:AAFcOI5tVlJlk4xxnzxAgIUBmW4DW5KElro"  # ← Твой токен
-GROUP_ID = -1003033000994  # ← ID твоей группы
-WEB_APP_URL = "https://test-webapp.onrender.com"  # ← Ссылка на твой Static Site
+API_TOKEN = "8191852280:AAFcOI5tVlJlk4xxnzxAgIUBmW4DW5KElro"
+WEB_APP_URL = "https://cameri-github-io.onrender.com"  # Замените на свой URL
 
 # Логирование
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# === Создаём бота ===
+bot = Bot(token=API_TOKEN)
+dp = Dispatcher()
 
-# === /start — отправляем кнопку ===
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
+# === /start — кнопка ===
+@dp.message(Command("start"))
+async def start(message: types.Message):
+    user = message.from_user
     logger.info(f"Получен /start от {user.full_name}")
 
-    # Кнопка с WebApp
-    keyboard = [[{"text": "🔧 Открыть тестовую страницу", "web_app": {"url": WEB_APP_URL}}]]
-    reply_markup = {"inline_keyboard": keyboard}
+    builder = InlineKeyboardBuilder()
+    builder.add(types.InlineKeyboardButton(
+        text="🎥 Открыть камеры",
+        web_app={"url": WEB_APP_URL}
+    ))
 
-    await update.message.reply_text(
-        "👋 Привет! Нажми кнопку ниже, чтобы протестировать WebApp.",
-        reply_markup=reply_markup
-    )
+    await message.answer("👋 Добро пожаловать!", reply_markup=builder.as_markup())
 
-
-# === Обработка web_app_data ===
-async def handle_webapp_data(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        data = update.effective_message.web_app_data.data
-        logger.info(f"📩 Получены данные: {data}")
-
-        # Отправляем ОТВЕТ В ТОТ ЖЕ ЧАТ (в бот)
-        await update.message.reply_text(f"✅ Получено: {data}")
-
-    except Exception as e:
-        logger.error(f"❌ Ошибка: {e}")
-        await update.message.reply_text(f"❌ Ошибка: {e}")
-
-
-# === Запуск бота ===
-def main():
-    application = Application.builder().token(API_TOKEN).build()
-
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.StatusUpdate.WEB_APP_DATA, handle_webapp_data))
-
+# === Запуск ===
+async def main():
     logger.info("🚀 Бот запущен")
-    application.run_polling()
-
+    await dp.start_polling(bot)
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+    asyncio.run(main())
