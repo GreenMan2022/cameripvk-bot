@@ -10,6 +10,6 @@ services:
       - key: BOT_TOKEN
         value: 8191852280:AAFcOI5tVlJlk4xxnzxAgIUBmW4DW5KElro
       - key: WEBHOOK_URL
-        value: https://cameripvk-bot.onrender.com
+        value: https://cameripvk-bot-1.onrender.com
       - key: PORT
         value: 10000
