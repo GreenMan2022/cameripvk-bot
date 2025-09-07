@@ -1,9 +1,15 @@
 services:
   - type: web
-    name: cameripvk
-    runtime: python
+    name: cameripvk-bot
+    env: python
+    region: oregon
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: python bot.py
     envVars:
+      - key: BOT_TOKEN
+        value: 8191852280:AAFcOI5tVlJlk4xxnzxAgIUBmW4DW5KElro
+      - key: WEBHOOK_URL
+        value: https://cameripvk-bot.onrender.com
       - key: PORT
         value: 10000
