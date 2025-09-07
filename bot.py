@@ -1,19 +1,18 @@
 # bot.py
 import asyncio
-from aiogram import Bot, Dispatcher, F
-from aiogram.types import Message, Update
+from aiogram import Bot, Dispatcher
 from aiogram.filters import Command
-from aiogram.webhook.aiohttp_server import SimpleRequestHandler, AiohttpWebhookRunner
+from aiogram.types import Message
 from aiohttp import web
 import os
 
 # === Настройки ===
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-APP_PORT = int(os.getenv("PORT", 10000))
-APP_HOST = "0.0.0.0"
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # Например: https://cameripvk-bot.onrender.com
+PORT = int(os.getenv("PORT", 10000))
+HOST = "0.0.0.0"
 
-# === Инициализация бота ===
+# === Инициализация бота и диспетчера ===
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
@@ -22,22 +21,32 @@ dp = Dispatcher()
 async def cmd_start(message: Message):
     await message.answer("Привет! Я работаю на Render!")
 
-@dp.message(F.text)
+@dp.message()
 async def echo(message: Message):
-    # Пример: пересылка сообщений в группу
-    await bot.send_message(-1003033000994, f"Сообщение от {message.from_user.first_name}: {message.text}")
+    # Пример: пересылка в группу
+    await bot.send_message(-1003033000994, f"📩 {message.text}")
 
-# === Запуск вебхука ===
-async def main():
-    # Устанавливаем вебхук
+# === Веб-сервер ===
+async def handle_update(request):
+    update = await request.json()
+    await dp.feed_update(bot, update=update)
+    return web.Response()
+
+async def on_startup(app):
     await bot.set_webhook(f"{WEBHOOK_URL}/webhook")
+    print(f"Бот запущен. Вебхук установлен на {WEBHOOK_URL}/webhook")
 
-    # Создаём веб-приложение
-    app = web.Application()
-    SimpleRequestHandler(dispatcher=dp, bot=bot).register(app, path="/webhook")
-    runner = AiohttpWebhookRunner(app)
-    await runner.setup()
-    await web._run_app(app, host=APP_HOST, port=APP_PORT)
+async def on_shutdown(app):
+    await bot.delete_webhook()
+    await bot.session.close()
+    print("Бот остановлен")
 
+# Создаём веб-приложение
+app = web.Application()
+app.on_startup.append(on_startup)
+app.on_shutdown.append(on_shutdown)
+app.router.add_post("/webhook", handle_update)
+
+# === Запуск ===
 if __name__ == "__main__":
-    asyncio.run(main())
+    web.run_app(app, host=HOST, port=PORT)
