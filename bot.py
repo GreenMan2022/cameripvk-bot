@@ -1,6 +1,6 @@
 # bot.py
 from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes
 from aiohttp import web
 import os
 
@@ -27,7 +27,7 @@ async def setup_application():
 
     # Добавляем обработчики
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(None, echo))
+    app.add_handler(MessageHandler(None, echo))  # Ловит все текстовые сообщения
 
     return app
 
