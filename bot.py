@@ -1,10 +1,12 @@
-# bot.py
 from telegram import Update, WebAppInfo
 from telegram.ext import Application, CommandHandler, ContextTypes
+import os
+import asyncio
 
 # === Настройки ===
-BOT_TOKEN = "8191852280:AAFcOI5tVlJlk4xxnzxAgIUBmW4DW5KElro"
-WEB_APP_URL = "https://cameri-github-io.onrender.com"  # Ваш сайт
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "8191852280:AAFcOI5tVlJlk4xxnzxAgIUBmW4DW5KElro")
+WEB_APP_URL = os.environ.get("WEB_APP_URL", "https://cameri-github-io.onrender.com")
+PORT = int(os.environ.get("PORT", 10000))  # Render автоматически назначает порт
 
 # === Обработчик /start ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -22,7 +24,26 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # === Запуск ===
 if __name__ == "__main__":
+    # Создаем приложение
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
+    
     print("Бот запущен. Ожидаем команду /start...")
-    app.run_polling()
+    
+    # Запускаем бота в режиме polling
+    # Это создаст фоновую задачу, которая не блокирует основной поток
+    loop = asyncio.get_event_loop()
+    loop.create_task(app.run_polling())
+    
+    # Создаем простой HTTP-сервер для удовлетворения требований Render
+    from aiohttp import web
+    
+    async def health_check(request):
+        return web.Response(text="Bot is running")
+    
+    # Создаем и запускаем HTTP-сервер
+    http_app = web.Application()
+    http_app.router.add_get('/health', health_check)
+    
+    # Запускаем HTTP-сервер на порту, который требует Render
+    web.run_app(http_app, port=PORT, host='0.0.0.0')
