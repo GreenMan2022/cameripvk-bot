@@ -1,3 +1,4 @@
 python-telegram-bot
 aiohttp
 python-telegram-bot[webhooks]
+python-telegram-bot>=20.0a1
