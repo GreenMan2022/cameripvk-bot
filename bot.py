@@ -9,8 +9,8 @@ logger = logging.getLogger(__name__)
 
 # === Настройки ===
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "8191852280:AAFcOI5tVlJlk4xxnzxAgIUBmW4DW5KElro")
-WEB_APP_URL = os.environ.get("WEB_APP_URL", "https://cameri-github-io.onrender.com")  # Должен быть полноценный URL с HTTPS
-PORT = int(os.environ.get("PORT", 10000))  # Использует порт, назначаемый Render
+WEB_APP_URL = os.environ.get("WEB_APP_URL", "https://cameri-github-io.onrender.com")  # Обязательно полный URL с HTTPS
+PORT = int(os.environ.get("PORT", 10000))  # Порт, назначенный Render
 
 # === Обработчик /start ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -26,7 +26,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         }
     )
 
-# === Основной обработчик запуска ===
+# === Главный обработчик ===
 def main():
     # Создаем приложение
     app = Application.builder().token(BOT_TOKEN).build()
@@ -34,10 +34,11 @@ def main():
 
     logger.info(f"Starting bot server on port {PORT}.")
 
-    # Запускаем сервер на прослушивании указанного порта
+    # Запускаем приложение с веб-хуком
     app.run_webhook(listen="0.0.0.0", port=PORT, url_path=BOT_TOKEN,
                    webhook_url=f"{WEB_APP_URL}/{BOT_TOKEN}",
-                   allowed_updates=["message"], drop_pending_updates=True)
+                   allowed_updates=["message"],
+                   drop_pending_updates=True)
 
 if __name__ == "__main__":
     main()
