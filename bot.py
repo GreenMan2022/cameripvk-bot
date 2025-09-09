@@ -1,43 +1,18 @@
-from telegram import Update, WebAppInfo
-from telegram.ext import Application, CommandHandler, ContextTypes
-import os
-import asyncio
-import logging
+from telegram import Update, WebAppInfofrom telegram.ext import Application, CommandHandler, ContextTypesimport osimport asyncio
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+=== Настройки ===
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "8191852280:AAFcOI5tVlJlk4xxnzxAgIUBmW4DW5KElro")WEB_APP_URL = os.environ.get("WEB_APP_URL", "https://cameri-github-io.onrender.com")PORT = int(os.environ.get("PORT", 10000))  # Render автоматически назначает порт
 
-# === Настройки ===
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "8191852280:AAFcOI5tVlJlk4xxnzxAgIUBmW4DW5KElro")
-WEB_APP_URL = os.environ.get("WEB_APP_URL", "https://cameri-github-io.onrender.com")
-PORT = int(os.environ.get("PORT", 10000))  # Получаем порт из окружения или используем дефолт
+=== Обработчик /start ===
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):    await update.message.reply_text(        "🎥 Добро пожаловать! Нажмите кнопку ниже, чтобы открыть камеры:",        reply_markup={            "inline_keyboard": [                [{                    "text": "📷 Открыть камеры",                    "web_app": {"url": WEB_APP_URL}                }]            ]        }    )
 
-# === Обработчик /start ===
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "🎥 Добро пожаловать! Нажмите кнопку ниже, чтобы открыть камеры:",
-        reply_markup={
-            "inline_keyboard": [
-                [{
-                    "text": "📷 Открыть камеры",
-                    "web_app": {"url": WEB_APP_URL}
-                }]
-            ]
-        }
-    )
+=== Запуск ===
+if name == "main":    # Создаем приложение    app = Application.builder().token(BOT_TOKEN).build()    app.add_handler(CommandHandler("start", start))
 
-# === Основной обработчик запуска ===
-def main():
-    # Создаем приложение
-    app = Application.builder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
 
-    logger.info(f"Starting bot server on port {PORT}.")
+print("Бот запущен. Ожидаем команду /start...")
 
-    # Приложение должно начинать обрабатывать входящие запросы (run_polling или run_webhook).
-    # Мы запустим webhook для обработки запросов через указанный порт.
-    app.run_webhook(listen="0.0.0.0", port=PORT, url_path=BOT_TOKEN,
-                   webhook_url=f"{WEB_APP_URL}/{BOT_TOKEN}")
-
-if __name__ == "__main__":
-    main()
+# Запускаем бота в режиме polling
+# Это создаст фоновую задачу, которая не блокирует основной поток
+loop = asyncio.get_event_loop()
+loop.create_task(app.run_polling()) сделай что бы рендер все время не падал, может бесконечно перезапускать сервер через каждый 2 минуты
