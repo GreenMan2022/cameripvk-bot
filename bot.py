@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 # Загрузка настроек из окружения
 BOT_TOKEN = "8191852280:AAFcOI5tVlJlk4xxnzxAgIUBmW4DW5KElro"
-WEB_APP_URL = "https://cameri-github-io.onrender.com"
+WEBHOOK_URL = "https://cameri-github-io.onrender.com"
 PORT = int(os.getenv("PORT", 8080))
 
 # Функция-обработчик команды /start
