@@ -34,16 +34,3 @@ if __name__ == "__main__":
     # Это создаст фоновую задачу, которая не блокирует основной поток
     loop = asyncio.get_event_loop()
     loop.create_task(app.run_polling())
-    
-    # Создаем простой HTTP-сервер для удовлетворения требований Render
-    from aiohttp import web
-    
-    async def health_check(request):
-        return web.Response(text="Bot is running")
-    
-    # Создаем и запускаем HTTP-сервер
-    http_app = web.Application()
-    http_app.router.add_get('/health', health_check)
-    
-    # Запускаем HTTP-сервер на порту, который требует Render
-    web.run_app(http_app, port=PORT, host='0.0.0.0')
