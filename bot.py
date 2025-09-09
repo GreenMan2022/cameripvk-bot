@@ -34,8 +34,7 @@ def main():
 
     logger.info(f"Starting bot server on port {PORT}.")
 
-    # Приложение должно начинать обрабатывать входящие запросы (run_polling или run_webhook).
-    # Мы запустим webhook для обработки запросов через указанный порт.
+    # Запускаем приложение с поддержкой вебхуков
     app.run_webhook(listen="0.0.0.0", port=PORT, url_path=BOT_TOKEN,
                    webhook_url=f"{WEB_APP_URL}/{BOT_TOKEN}")
 
