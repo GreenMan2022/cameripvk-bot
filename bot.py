@@ -8,8 +8,8 @@ logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 # Загрузка настроек из окружения
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "8191852280:AAFcOI5tVlJlk4xxnzxAgIUBmW4DW5KElro")
+WEB_APP_URL = os.environ.get("WEB_APP_URL", "https://cameri-github-io.onrender.com") 
 PORT = int(os.getenv("PORT", 8080))
 
 # Функция-обработчик команды /start
