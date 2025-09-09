@@ -1,5 +1,5 @@
 from telegram import Update, WebAppInfo
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import Application, CommandHandler, ContextTypes
 import os
 import asyncio
 import logging
@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 # === Настройки ===
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "8191852280:AAFcOI5tVlJlk4xxnzxAgIUBmW4DW5KElro")
 WEB_APP_URL = os.environ.get("WEB_APP_URL", "https://cameri-github-io.onrender.com")  # Обязательно полный URL с HTTPS
-PORT = int(os.environ.get("PORT", 10000))  # Порт, назначенный Render
+PORT = int(os.environ.get("PORT", 10000))  # Портируемый порт
 
 # === Обработчик /start ===
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -26,20 +26,15 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         }
     )
 
-# === Логгер сообщений ===
-async def log_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    logger.info(f"Получено сообщение от пользователя {update.effective_user.first_name}: {update.message.text}")
-
-# === Главная функция ===
+# === Основная функция ===
 def main():
-    # Создание приложения
+    # Создаем приложение
     app = Application.builder().token(BOT_TOKEN).build()
 
-    # Регистрация обработчиков
+    # Регистрируем обработчик команды /start
     app.add_handler(CommandHandler("start", start_command))
-    app.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, log_messages))
 
-    # Установка веб-хука
+    # Начинаем прослушивание на порту
     app.run_webhook(listen="0.0.0.0", port=PORT, url_path=BOT_TOKEN,
                    webhook_url=f"{WEB_APP_URL}/{BOT_TOKEN}",
                    allowed_updates=["message"],
