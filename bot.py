@@ -2,21 +2,18 @@ from telegram import Update, WebAppInfo
 from telegram.ext import Application, CommandHandler, ContextTypes
 import os
 import asyncio
-import time
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # === Настройки ===
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "8191852280:AAFcOI5tVlJlk4xxnzxAgIUBmW4DW5KElro")
 WEB_APP_URL = os.environ.get("WEB_APP_URL", "https://cameri-github-io.onrender.com")
-PORT = int(os.environ.get("PORT", 10000))  # Render автоматически назначает порт
-
-# Переменная для хранения chat_id администратора (можно заменить)
-ADMIN_CHAT_ID = None
+PORT = int(os.environ.get("PORT", 10000))  # Получаем порт из окружения или используем дефолт
 
 # === Обработчик /start ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global ADMIN_CHAT_ID
-    if not ADMIN_CHAT_ID:
-        ADMIN_CHAT_ID = update.effective_chat.id
     await update.message.reply_text(
         "🎥 Добро пожаловать! Нажмите кнопку ниже, чтобы открыть камеры:",
         reply_markup={
@@ -29,26 +26,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         }
     )
 
-# === Периодически отправляем сообщение администратору ===
-async def keep_alive():
-    while True:
-        try:
-            await asyncio.sleep(120)  # Ждем 2 минуты
-            await app.bot.send_message(chat_id=ADMIN_CHAT_ID, text="Ping!")
-        except Exception as e:
-            print(f"Ошибка ping: {e}")
-
-# === Запуск ===
-if __name__ == "__main__":
+# === Основной обработчик запуска ===
+def main():
     # Создаем приложение
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
-    
-    print("Бот запущен. Ожидаем команду /start...")
-    
-    # Создаем цикл обновления каждые 2 минуты
-    loop = asyncio.get_event_loop()
-    loop.create_task(keep_alive())
-    
-    # Запускаем бота в режиме polling
-    loop.create_task(app.run_polling())
+
+    logger.info(f"Starting bot server on port {PORT}.")
+
+    # Приложение должно начинать обрабатывать входящие запросы (run_polling или run_webhook).
+    # Мы запустим webhook для обработки запросов через указанный порт.
+    app.run_webhook(listen="0.0.0.0", port=PORT, url_path=BOT_TOKEN,
+                   webhook_url=f"{WEB_APP_URL}/{BOT_TOKEN}")
+
+if __name__ == "__main__":
+    main()
