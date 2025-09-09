@@ -1,5 +1,5 @@
 from telegram import Update, WebAppInfo
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 import os
 import asyncio
 import logging
@@ -13,7 +13,7 @@ WEB_APP_URL = os.environ.get("WEB_APP_URL", "https://cameri-github-io.onrender.c
 PORT = int(os.environ.get("PORT", 10000))  # Порт, назначенный Render
 
 # === Обработчик /start ===
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "🎥 Добро пожаловать! Нажмите кнопку ниже, чтобы открыть камеры:",
         reply_markup={
@@ -26,15 +26,20 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         }
     )
 
-# === Главный обработчик ===
+# === Логгер сообщений ===
+async def log_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.info(f"Получено сообщение от пользователя {update.effective_user.first_name}: {update.message.text}")
+
+# === Главная функция ===
 def main():
-    # Создаем приложение
+    # Создание приложения
     app = Application.builder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
 
-    logger.info(f"Starting bot server on port {PORT}.")
+    # Регистрация обработчиков
+    app.add_handler(CommandHandler("start", start_command))
+    app.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, log_messages))
 
-    # Запускаем приложение с веб-хуком
+    # Установка веб-хука
     app.run_webhook(listen="0.0.0.0", port=PORT, url_path=BOT_TOKEN,
                    webhook_url=f"{WEB_APP_URL}/{BOT_TOKEN}",
                    allowed_updates=["message"],
